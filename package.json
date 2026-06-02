@@ -1,0 +1,16 @@
+{
+	"name": "tsheets-auto",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Auto-fill QuickBooks Time (TSheets) daily timesheet via Playwright",
+	"main": "fill-timesheet.js",
+	"scripts": {
+		"fill": "node fill-timesheet.js",
+		"fill:debug": "node fill-timesheet.js --debug",
+		"inspect": "node fill-timesheet.js --inspect",
+		"setup-schedule": "powershell -ExecutionPolicy Bypass -File setup-schedule.ps1"
+	},
+	"dependencies": {
+		"playwright": "^1.52.0"
+	}
+}
