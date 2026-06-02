@@ -344,13 +344,11 @@ async function main() {
 			const cell = page.locator(`#${cellId}`);
 			await cell.waitFor({ state: "visible", timeout: 5000 });
 			await cell.click();
-			await cell.fill(hoursValue);
-			console.log(`[TSheets] Filled "${hoursValue}" into #${cellId}`);
+			await page.waitForTimeout(2000);
 
 			// Set Service Item and Billable if configured (required fields for new rows)
 			// The details panel opens when a cell is clicked — dropdowns are <select> with class weekly_timecard-tag-value
 			if (config.serviceItem || config.billable) {
-				await page.waitForTimeout(1000);
 				const tagSelects = page.locator("select.weekly_timecard-tag-value");
 				const tagCount = await tagSelects.count();
 
@@ -371,6 +369,10 @@ async function main() {
 					}
 				}
 			}
+
+			await cell.fill(hoursValue);
+			console.log(`[TSheets] Filled "${hoursValue}" into #${cellId}`);
+			await page.waitForTimeout(2000);
 
 			anyFilled = true;
 		}
