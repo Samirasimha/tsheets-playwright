@@ -225,6 +225,17 @@ async function main() {
 		console.log("[TSheets] Waiting for Time Entries to load...");
 		await page.waitForTimeout(6000);
 
+		// Ensure we're on the Manual Time Card tab
+		const manualTab = page.locator("text='Manual Time Card'");
+		if (await manualTab.isVisible({ timeout: 3000 }).catch(() => false)) {
+			const isActive = await manualTab.evaluate(el => el.classList.contains("active") || el.closest(".active") !== null).catch(() => false);
+			if (!isActive) {
+				await manualTab.click();
+				console.log("[TSheets] Clicked 'Manual Time Card' tab.");
+				await page.waitForTimeout(3000);
+			}
+		}
+
 		if (INSPECT) {
 			await dumpPageStructure(page);
 			console.log("[TSheets] Browser staying open. Press Ctrl+C to exit.");
