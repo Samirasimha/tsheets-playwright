@@ -346,6 +346,32 @@ async function main() {
 			await cell.click();
 			await cell.fill(hoursValue);
 			console.log(`[TSheets] Filled "${hoursValue}" into #${cellId}`);
+
+			// Set Service Item and Billable if configured (required fields for new rows)
+			// The details panel opens when a cell is clicked — dropdowns are <select> with class weekly_timecard-tag-value
+			if (config.serviceItem || config.billable) {
+				await page.waitForTimeout(1000);
+				const tagSelects = page.locator("select.weekly_timecard-tag-value");
+				const tagCount = await tagSelects.count();
+
+				if (tagCount >= 1 && config.serviceItem) {
+					const siSelect = tagSelects.nth(0);
+					const currentSi = await siSelect.inputValue().catch(() => "");
+					if (!currentSi || currentSi === "") {
+						await siSelect.selectOption({ label: config.serviceItem });
+						console.log(`[TSheets] Service Item: ${config.serviceItem}`);
+					}
+				}
+				if (tagCount >= 2 && config.billable) {
+					const billSelect = tagSelects.nth(1);
+					const currentBill = await billSelect.inputValue().catch(() => "");
+					if (!currentBill || currentBill === "") {
+						await billSelect.selectOption({ label: config.billable });
+						console.log(`[TSheets] Billable: ${config.billable}`);
+					}
+				}
+			}
+
 			anyFilled = true;
 		}
 
