@@ -1,8 +1,9 @@
-# TSheets Auto-Fill — Windows Scheduled Task Setup
+# TSheets Auto-Fill - Windows Scheduled Task Setup
 # Run as Administrator
 
 param(
-	[string]$Time = "16:45",
+	[string]$Time = "16:00",
+	[string]$RandomDelay = "02:00:00",
 	[switch]$Remove
 )
 
@@ -27,8 +28,9 @@ $Action = New-ScheduledTaskAction `
 	-Argument "`"$ScriptDir\fill-timesheet.js`"" `
 	-WorkingDirectory $ScriptDir
 
-# Trigger: weekdays at the specified time
+# Trigger: weekdays at the specified time, with a random delay up to $RandomDelay
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At $Time
+$Trigger.RandomDelay = [System.Xml.XmlConvert]::ToString([System.TimeSpan]::Parse($RandomDelay))
 
 # Settings: run whether logged in or not, don't stop if on battery
 $Settings = New-ScheduledTaskSettingsSet `
@@ -40,19 +42,17 @@ $Settings = New-ScheduledTaskSettingsSet `
 # Use current user's context
 $Principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
 
-# Register
+# Register (always remove first to avoid Set-ScheduledTask permission issues)
 $existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 if ($existing) {
-	Set-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Principal $Principal | Out-Null
-	Write-Host "Updated scheduled task '$TaskName' — runs weekdays at $Time."
-} else {
-	Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Principal $Principal | Out-Null
-	Write-Host "Created scheduled task '$TaskName' — runs weekdays at $Time."
+	Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
 }
+Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Principal $Principal | Out-Null
+Write-Host "Registered scheduled task '$TaskName' - runs weekdays at $Time."
 
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  1. Run 'npm run fill:debug' first to log in and save your session"
-Write-Host "  2. The task will run automatically at $Time on weekdays"
+Write-Host "  1. Run npm run fill:debug first to log in and save your session"
+Write-Host "  2. The task will run automatically at $Time on weekdays (+/-$RandomDelay random delay)"
 Write-Host "  3. To remove: .\setup-schedule.ps1 -Remove"
-Write-Host "  4. To change time: .\setup-schedule.ps1 -Time '17:00'"
+Write-Host "  4. To change time: .\setup-schedule.ps1 -Time 17:00"
